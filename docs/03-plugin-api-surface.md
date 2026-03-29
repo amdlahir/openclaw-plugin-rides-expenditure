@@ -7,6 +7,7 @@ File: `openclaw.plugin.json`
 ```json
 {
   "id": "rides-expenditure",
+  "skills": ["./skills"],
   "configSchema": {
     "type": "object",
     "additionalProperties": false,
@@ -411,25 +412,27 @@ Each sync cycle:
 
 ---
 
-## Hook (1)
+## Skill (1)
 
-### `before_prompt_build`
+### `rides-tracking`
 
-Injects a system context snippet so the AI agent knows about ride tracking capabilities.
+Declared in `openclaw.plugin.json` via the `skills` field. OpenClaw loads the `SKILL.md` file and injects it into the agent's context so it knows when and how to use the ride tracking tools.
 
-```typescript
-api.on("before_prompt_build", async (event, ctx) => {
-  return {
-    appendSystemContext: `You have access to ride expenditure tracking tools. You can:
-- Log rides manually (log_ride)
-- List and search past rides (list_rides, search_rides)
-- Show spending statistics (ride_spending_stats)
-- Check budget status (get_budget_status)
-- Parse receipt screenshots (parse_receipt_screenshot)
-- Sync ride emails from Gmail (sync_ride_emails)
-When the user mentions ride expenses, Grab, Gojek, or Tada, use these tools.`
-  };
-});
+**Manifest entry:**
+```json
+{
+  "id": "rides-expenditure",
+  "skills": ["./skills"],
+  ...
+}
 ```
 
-This uses `appendSystemContext` (cached, not per-turn) to minimize token cost.
+**Skill file:** `skills/rides-tracking/SKILL.md`
+
+Uses YAML frontmatter (`name`, `description`) and a markdown body that describes:
+- When to use ride tracking tools
+- Available tools and what each does
+- Example conversational flows
+- Supported providers (Grab, Gojek, Tada)
+
+This replaces a `before_prompt_build` hook — skills are the idiomatic OpenClaw way to teach the agent about plugin capabilities.

@@ -4,8 +4,11 @@
 
 ```
 /home/amin/projects/openclaw-plugin-rides-expenditure/
-├── openclaw.plugin.json              # Plugin manifest (id, configSchema)
+├── openclaw.plugin.json              # Plugin manifest (id, configSchema, skills)
 ├── package.json                      # NPM package with openclaw.extensions
+├── skills/
+│   └── rides-tracking/
+│       └── SKILL.md                  # Agent skill: how to use ride tracking tools
 ├── src/
 │   ├── index.ts                      # Plugin entry: default export with register()
 │   │
@@ -55,7 +58,8 @@
 
 | File | Lines (est.) | Responsibility |
 |------|-------------|----------------|
-| `src/index.ts` | ~80 | Plugin definition + `register()`. Initializes DB, registers all tools/commands/routes/services/hooks. |
+| `src/index.ts` | ~70 | Plugin definition + `register()`. Initializes DB, registers all tools/commands/routes/services. |
+| `skills/rides-tracking/SKILL.md` | ~60 | Agent skill definition. Teaches the LLM when and how to use ride tracking tools. |
 
 ### Core Data Layer
 

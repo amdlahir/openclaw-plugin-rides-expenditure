@@ -1,0 +1,27 @@
+{
+  "name": "openclaw-plugin-rides-expenditure",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/amdlahir/openclaw-plugin-rides-expenditure#readme",
+  "bugs": {
+    "url": "https://github.com/amdlahir/openclaw-plugin-rides-expenditure/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/amdlahir/openclaw-plugin-rides-expenditure.git"
+  },
+  "license": "ISC",
+  "author": "Amin",
+  "type": "commonjs",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@ai-hero/sandcastle": "^0.1.6"
+  },
+  "devDependencies": {}
+}

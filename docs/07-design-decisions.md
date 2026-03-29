@@ -98,11 +98,15 @@ The original used Convex's built-in cron system (`crons.interval("name", { minut
 
 ---
 
-## 8. appendSystemContext for Tool Awareness
+## 8. SKILL.md for Tool Awareness
 
-**Decision:** Use `before_prompt_build` hook with `appendSystemContext` to inject tool awareness.
+**Decision:** Use a `SKILL.md` file (declared via `"skills"` in `openclaw.plugin.json`) instead of a `before_prompt_build` hook.
 
-**Rationale:** Without this, the LLM may not know to use ride-related tools unless the user explicitly mentions them. The system context injection tells the agent: "You have ride tracking tools available." This uses `appendSystemContext` (cached by providers that support prompt caching) rather than `prependContext` (per-turn) to minimize token cost.
+**Rationale:** Skills are the idiomatic OpenClaw mechanism for teaching the agent about plugin capabilities. A `SKILL.md` file with YAML frontmatter and markdown instructions is automatically loaded by OpenClaw and injected into the agent's context. This is preferred over a `before_prompt_build` hook because:
+- Skills participate in OpenClaw's skill precedence and enablement system
+- They can be discovered, listed, and toggled by the user via `/skills`
+- No plugin code executes to provide the context — it's declarative
+- Skills can be overridden at the workspace level if the user wants to customize behavior
 
 ---
 

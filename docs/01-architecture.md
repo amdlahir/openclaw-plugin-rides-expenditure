@@ -55,7 +55,7 @@ The plugin registers into OpenClaw via five extension surfaces:
 | Commands | `api.registerCommand()` | 3 | Direct `/slash` commands bypassing LLM |
 | HTTP Routes | `api.registerHttpRoute()` | 2 | Gmail OAuth2 flow |
 | Services | `api.registerService()` | 1 | Background email sync |
-| Hooks | `api.on()` | 1 | System prompt injection for tool awareness |
+| Skills | `openclaw.plugin.json` | 1 | SKILL.md teaches agent about ride tracking tools |
 
 ## Data Flow
 
@@ -158,4 +158,6 @@ src/index.ts (entry)
   |
   +-- src/types.ts (Zod schemas)
   +-- src/constants.ts (provider config)
+
+skills/rides-tracking/SKILL.md  (loaded by OpenClaw, not imported by code)
 ```

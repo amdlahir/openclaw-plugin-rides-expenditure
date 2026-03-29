@@ -208,15 +208,22 @@
 
 ---
 
-## Phase 9 — System Prompt Hook
+## Phase 9 — Skill Definition
 
 **Goal:** AI agent knows about ride tracking capabilities without being told.
 
-### Add to `src/index.ts`:
-- Register `before_prompt_build` hook with `appendSystemContext`
+### Files to create:
+
+20. **`skills/rides-tracking/SKILL.md`** — Agent skill with:
+    - YAML frontmatter: `name`, `description`
+    - Markdown body: when to use, available tools, example flows, supported providers
+
+### Update `openclaw.plugin.json`:
+- Add `"skills": ["./skills"]`
 
 ### Verification:
 - Chat: "How much did I spend on rides?" → agent uses tools without needing explicit instructions
+- `/skills` command lists `rides-tracking` as available
 
 ---
 
@@ -230,7 +237,7 @@ Phase 1 ──→ Phase 2 ──→ Phase 3
   └──→ Phase 7 (depends on Phase 4 for screenshotParser.ts types)
 
 Phase 8 depends on Phase 2 + Phase 6 (reuses same DB queries)
-Phase 9 is independent (can be added at any phase)
+Phase 9 is independent (declarative SKILL.md, can be added at any phase)
 ```
 
 Phases 2-3 and Phases 4-5 can be developed in parallel.
