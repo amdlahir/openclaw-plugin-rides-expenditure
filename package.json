@@ -1,7 +1,7 @@
 {
-  "name": "openclaw-plugin-rides-expenditure",
-  "version": "1.0.0",
-  "description": "",
+  "name": "openclaw-plugin-rides",
+  "version": "0.1.0",
+  "description": "OpenClaw plugin for ride-hailing expense tracking",
   "homepage": "https://github.com/amdlahir/openclaw-plugin-rides-expenditure#readme",
   "bugs": {
     "url": "https://github.com/amdlahir/openclaw-plugin-rides-expenditure/issues"
@@ -13,15 +13,20 @@
   "license": "ISC",
   "author": "Amin",
   "type": "commonjs",
-  "main": "index.js",
-  "directories": {
-    "doc": "docs"
+  "openclaw": {
+    "extensions": ["./src/index.ts"]
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
-    "@ai-hero/sandcastle": "^0.1.6"
+    "@libsql/client": "^0.17.2",
+    "zod": "^4.3.6"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.2"
+  }
 }

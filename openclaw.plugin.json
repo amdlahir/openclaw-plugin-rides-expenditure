@@ -1,0 +1,41 @@
+{
+  "id": "rides",
+  "skills": ["./skills"],
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "googleClientId": {
+        "type": "string",
+        "description": "Google OAuth2 Client ID for Gmail API access"
+      },
+      "googleClientSecret": {
+        "type": "string",
+        "description": "Google OAuth2 Client Secret"
+      },
+      "googleAiApiKey": {
+        "type": "string",
+        "description": "Google AI API key for Gemini 2.0 Flash. Optional — enables screenshot parsing."
+      },
+      "baseUrl": {
+        "type": "string",
+        "description": "Public URL of the OpenClaw instance (for OAuth redirect URI)"
+      },
+      "defaultCurrency": {
+        "type": "string",
+        "default": "SGD",
+        "enum": ["SGD", "USD", "MYR"]
+      },
+      "defaultCategory": {
+        "type": "string",
+        "default": "personal",
+        "enum": ["work", "personal"]
+      },
+      "syncIntervalMinutes": {
+        "type": "number",
+        "default": 15
+      }
+    },
+    "required": ["googleClientId", "googleClientSecret", "baseUrl"]
+  }
+}
