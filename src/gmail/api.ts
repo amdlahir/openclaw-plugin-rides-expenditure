@@ -69,20 +69,37 @@ export async function fetchGmailMessages(
     query += ` after:${dateStr}`;
   }
 
-  const url = new URL(`${GMAIL_API_BASE}/messages`);
-  url.searchParams.set("q", query);
-  url.searchParams.set("maxResults", "50");
+  const allMessages: GmailMessage[] = [];
+  let pageToken: string | undefined;
 
-  const response = await fetch(url.toString(), {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
+  do {
+    const url = new URL(`${GMAIL_API_BASE}/messages`);
+    url.searchParams.set("q", query);
+    url.searchParams.set("maxResults", "100");
+    if (pageToken) {
+      url.searchParams.set("pageToken", pageToken);
+    }
 
-  if (!response.ok) {
-    throw new Error(`Gmail API error: ${response.status}`);
-  }
+    const response = await fetch(url.toString(), {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
 
-  const data = (await response.json()) as { messages?: GmailMessage[] };
-  return data.messages || [];
+    if (!response.ok) {
+      throw new Error(`Gmail API error: ${response.status}`);
+    }
+
+    const data = (await response.json()) as {
+      messages?: GmailMessage[];
+      nextPageToken?: string;
+    };
+
+    if (data.messages) {
+      allMessages.push(...data.messages);
+    }
+    pageToken = data.nextPageToken;
+  } while (pageToken);
+
+  return allMessages;
 }
 
 export async function fetchMessageDetail(

@@ -112,13 +112,15 @@ export function createRidesStatsCommand(db: Client) {
   };
 }
 
-export function createRidesSyncCommand(db: Client, syncFn: () => Promise<{ success: boolean; emails_processed: number; rides_created: number; errors: string[] }>) {
+export function createRidesSyncCommand(db: Client, syncFn: (months?: number) => Promise<{ success: boolean; emails_processed: number; rides_created: number; errors: string[] }>) {
   return {
     name: "rides_sync",
-    description: "Trigger email sync and report results",
+    description: "Trigger email sync and report results. Pass a number to sync that many months of history (e.g., /rides_sync 6).",
     requireAuth: false,
-    handler: async () => {
-      const result = await syncFn();
+    acceptsArgs: true,
+    handler: async (ctx: { args?: string }) => {
+      const months = ctx.args ? parseInt(ctx.args.trim(), 10) : undefined;
+      const result = await syncFn(Number.isNaN(months) ? undefined : months);
 
       const stateResult = await db.execute({
         sql: "SELECT last_sync_at FROM sync_state WHERE id = 1",

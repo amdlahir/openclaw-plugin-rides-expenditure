@@ -34,6 +34,7 @@ export async function syncEmails(
   db: Client,
   config: SyncConfig,
   provider?: string,
+  months?: number,
   fetchRates: FetchRatesFn = fetchRatesFromApi,
 ): Promise<SyncResult> {
   const errors: string[] = [];
@@ -83,6 +84,16 @@ export async function syncEmails(
     }
   }
 
+  // Determine the after date: explicit months param > last_sync_at > no filter
+  let afterDate: number | undefined;
+  if (months) {
+    const d = new Date();
+    d.setMonth(d.getMonth() - months);
+    afterDate = d.getTime();
+  } else {
+    afterDate = lastSyncAt;
+  }
+
   // Determine which providers to sync
   const providersToSync = provider ? [provider] : Object.keys(PROVIDER_EMAILS);
 
@@ -91,7 +102,7 @@ export async function syncEmails(
     if (!providerEmail) continue;
 
     try {
-      const messages = await fetchGmailMessages(accessToken, providerEmail, lastSyncAt);
+      const messages = await fetchGmailMessages(accessToken, providerEmail, afterDate);
 
       for (const msg of messages) {
         try {

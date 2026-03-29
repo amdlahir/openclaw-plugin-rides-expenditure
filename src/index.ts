@@ -294,15 +294,16 @@ function registerRideTools(api: PluginApi, db: Client, config: ReturnType<typeof
 }
 
 export default {
-  async register(api: PluginApi) {
+  register(api: PluginApi) {
     const config = getConfig(api.pluginConfig);
     const stateDir = api.runtime.state.resolveStateDir();
     const dbPath = path.join(stateDir, "rides", "rides.db");
     const db = createDbClient(dbPath);
 
     api.logger.info("Initializing rides plugin, DB at:", dbPath);
-    await runMigrations(db);
-    api.logger.info("Database migrations complete");
+    runMigrations(db)
+      .then(() => api.logger.info("Database migrations complete"))
+      .catch((err) => api.logger.error("Migration failed:", err));
 
     registerRideTools(api, db, config);
 
@@ -337,7 +338,7 @@ export default {
       name: "sync_ride_emails",
       label: "Sync Ride Emails",
       description:
-        "Sync ride receipts from Gmail. Fetches emails from Grab and Gojek, extracts ride data, and saves new rides. Requires Gmail to be connected via OAuth.",
+        "Sync ride receipts from Gmail. Fetches emails from Grab and Gojek, extracts ride data, and saves new rides. Requires Gmail to be connected via OAuth. By default syncs only new emails since last sync. Use months parameter to sync historical emails.",
       parameters: {
         type: "object",
         properties: {
@@ -346,10 +347,14 @@ export default {
             enum: ["grab", "gojek"],
             description: "Only sync this specific provider. Omit to sync all.",
           },
+          months: {
+            type: "number",
+            description: "Number of months of history to sync (e.g., 6 for last 6 months). Omit to sync only new emails since last sync.",
+          },
         },
       },
       execute: wrapExecute((params) =>
-        handleSyncRideEmails(db, syncConfig, params.provider as string | undefined),
+        handleSyncRideEmails(db, syncConfig, params.provider as string | undefined, params.months as number | undefined),
       ),
     });
 
@@ -381,7 +386,7 @@ export default {
     api.registerCommand(createRidesCommand(db));
     api.registerCommand(createRidesStatsCommand(db));
     api.registerCommand(
-      createRidesSyncCommand(db, () => syncEmails(db, syncConfig)),
+      createRidesSyncCommand(db, (months) => syncEmails(db, syncConfig, undefined, months)),
     );
 
     // Parse failure notification hook
