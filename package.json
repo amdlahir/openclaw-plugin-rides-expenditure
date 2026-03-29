@@ -10,7 +10,7 @@
     "type": "git",
     "url": "git+https://github.com/amdlahir/openclaw-plugin-rides-expenditure.git"
   },
-  "license": "ISC",
+  "license": "MIT",
   "author": "Amin",
   "type": "commonjs",
   "openclaw": {
