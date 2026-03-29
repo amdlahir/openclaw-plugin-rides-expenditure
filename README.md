@@ -191,6 +191,7 @@ Talk to the bot naturally:
 | "Set my ride budget to $500" | `set_ride_budget` |
 | "What's my budget status?" | `get_budget_status` |
 | "Sync my ride emails" | `sync_ride_emails` |
+| "Sync my ride emails for the past 3 months" | `sync_ride_emails` (months=3) |
 | *(send a receipt image)* | `parse_receipt_screenshot` |
 
 ### Slash Commands (instant, no AI)
