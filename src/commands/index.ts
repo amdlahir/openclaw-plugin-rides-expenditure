@@ -1,6 +1,7 @@
+import type { OpenClawPluginCommandDefinition } from "openclaw/plugin-sdk/plugin-entry";
 import type { Client } from "@libsql/client";
 
-export function createRidesCommand(db: Client) {
+export function createRidesCommand(db: Client): OpenClawPluginCommandDefinition {
   return {
     name: "rides",
     description: "Show recent rides in a formatted table",
@@ -38,7 +39,7 @@ export function createRidesCommand(db: Client) {
   };
 }
 
-export function createRidesStatsCommand(db: Client) {
+export function createRidesStatsCommand(db: Client): OpenClawPluginCommandDefinition {
   return {
     name: "rides_stats",
     description: "Show current month spending summary",
@@ -112,13 +113,13 @@ export function createRidesStatsCommand(db: Client) {
   };
 }
 
-export function createRidesSyncCommand(db: Client, syncFn: (months?: number) => Promise<{ success: boolean; emails_processed: number; rides_created: number; errors: string[] }>) {
+export function createRidesSyncCommand(db: Client, syncFn: (months?: number) => Promise<{ success: boolean; emails_processed: number; rides_created: number; errors: string[] }>): OpenClawPluginCommandDefinition {
   return {
     name: "rides_sync",
     description: "Trigger email sync and report results. Pass a number to sync that many months of history (e.g., /rides_sync 6).",
     requireAuth: false,
     acceptsArgs: true,
-    handler: async (ctx: { args?: string }) => {
+    handler: async (ctx) => {
       const months = ctx.args ? parseInt(ctx.args.trim(), 10) : undefined;
       const result = await syncFn(Number.isNaN(months) ? undefined : months);
 
@@ -145,7 +146,7 @@ export function createRidesSyncCommand(db: Client, syncFn: (months?: number) => 
   };
 }
 
-export function createRidesResetCommand(db: Client) {
+export function createRidesResetCommand(db: Client): OpenClawPluginCommandDefinition {
   return {
     name: "rides_reset",
     description: "Delete all rides and reset the sync cursor. This cannot be undone.",

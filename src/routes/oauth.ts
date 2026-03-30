@@ -1,4 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "http";
+
+type HttpRouteHandler = (req: IncomingMessage, res: ServerResponse) => Promise<boolean | void> | boolean | void;
 import type { Client } from "@libsql/client";
 import { buildGmailAuthUrl, exchangeCodeForTokens, generateNonce, type OAuthConfig } from "../gmail/oauth";
 
@@ -7,8 +9,8 @@ function parseQueryParams(url: string): URLSearchParams {
   return new URLSearchParams(idx >= 0 ? url.slice(idx + 1) : "");
 }
 
-export function createAuthHandler(db: Client, config: OAuthConfig) {
-  return async (_req: IncomingMessage, res: ServerResponse) => {
+export function createAuthHandler(db: Client, config: OAuthConfig): HttpRouteHandler {
+  return async (_req, res) => {
     const nonce = generateNonce();
 
     await db.execute({
@@ -23,8 +25,8 @@ export function createAuthHandler(db: Client, config: OAuthConfig) {
   };
 }
 
-export function createCallbackHandler(db: Client, config: OAuthConfig) {
-  return async (req: IncomingMessage, res: ServerResponse) => {
+export function createCallbackHandler(db: Client, config: OAuthConfig): HttpRouteHandler {
+  return async (req, res) => {
     const params = parseQueryParams(req.url || "");
     const code = params.get("code");
     const state = params.get("state");

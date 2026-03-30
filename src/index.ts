@@ -22,26 +22,9 @@ import {
   createRidesSyncCommand,
   createRidesResetCommand,
 } from "./commands/index";
+import { definePluginEntry } from "openclaw/plugin-sdk/plugin-entry";
+import type { OpenClawPluginApi } from "openclaw/plugin-sdk/plugin-entry";
 import type { Client } from "@libsql/client";
-
-type PluginApi = {
-  id: string;
-  pluginConfig?: Record<string, unknown>;
-  runtime: {
-    state: {
-      resolveStateDir: () => string;
-    };
-  };
-  logger: {
-    info: (...args: unknown[]) => void;
-    error: (...args: unknown[]) => void;
-  };
-  registerTool: (tool: unknown) => void;
-  registerCommand: (command: unknown) => void;
-  registerHttpRoute: (route: unknown) => void;
-  registerService: (service: unknown) => void;
-  on: (event: string, handler: unknown, opts?: unknown) => void;
-};
 
 function getConfig(pluginConfig?: Record<string, unknown>) {
   return {
@@ -63,7 +46,7 @@ function wrapExecute(handler: (params: Record<string, unknown>) => Promise<unkno
   };
 }
 
-function registerRideTools(api: PluginApi, db: Client, config: ReturnType<typeof getConfig>) {
+function registerRideTools(api: OpenClawPluginApi, db: Client, config: ReturnType<typeof getConfig>) {
   api.registerTool({
     name: "log_ride",
     label: "Log Ride",
@@ -294,17 +277,20 @@ function registerRideTools(api: PluginApi, db: Client, config: ReturnType<typeof
   });
 }
 
-export default {
-  register(api: PluginApi) {
+export default definePluginEntry({
+  id: "rides",
+  name: "Rides Expenditure",
+  description: "Track ride-hailing expenses from Grab and Gojek",
+  register(api) {
     const config = getConfig(api.pluginConfig);
     const stateDir = api.runtime.state.resolveStateDir();
     const dbPath = path.join(stateDir, "rides", "rides.db");
     const db = createDbClient(dbPath);
 
-    api.logger.info("Initializing rides plugin, DB at:", dbPath);
+    api.logger.info(`Initializing rides plugin, DB at: ${dbPath}`);
     runMigrations(db)
       .then(() => api.logger.info("Database migrations complete"))
-      .catch((err) => api.logger.error("Migration failed:", err));
+      .catch((err) => api.logger.error(`Migration failed: ${err}`));
 
     registerRideTools(api, db, config);
 
@@ -392,11 +378,11 @@ export default {
     api.registerCommand(createRidesResetCommand(db));
 
     // Parse failure notification hook
-    api.on("session_start", async () => {
+    api.on("before_prompt_build", async (_event, _ctx) => {
       const message = await checkUnnotifiedSyncErrors(db);
       if (message) {
         return { appendSystemContext: message };
       }
     });
   },
-};
+});

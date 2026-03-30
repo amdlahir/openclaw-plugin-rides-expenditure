@@ -12,9 +12,18 @@ An OpenClaw plugin for tracking ride-hailing expenses from Grab and Gojek. Log r
 > - The token is stored in plaintext in a local SQLite file on your machine
 > - Anyone with access to your machine (or the DB file) could use the token to read your emails
 >
+> **Token storage details:**
+> - Both the short-lived access token (~1 hour) and the long-lived refresh token are stored in plaintext in the `sync_state` table
+> - The refresh token **never expires** unless you explicitly revoke it -- a single leak grants persistent Gmail read access
+> - The database file is created with default OS permissions (no `chmod 600` hardening)
+> - If `~/.openclaw/` is included in cloud backups, file syncing, or rsync to shared servers, the tokens travel with it
+> - OpenClaw does not currently provide a plugin-level secure storage API, so encryption at rest is not available through the framework
+>
 > **Recommendations:**
 > - Only use this plugin on a machine you trust and control
 > - Do not share the `rides.db` file with anyone
+> - Restrict file permissions on the database: `chmod 600 ~/.openclaw/rides/rides.db`
+> - Exclude `~/.openclaw/rides/` from cloud backup and file sync services
 > - Periodically review connected apps in your [Google Account Security settings](https://myaccount.google.com/permissions) and revoke access if you stop using the plugin
 > - If your machine is compromised, revoke the app's access immediately from Google Account settings
 >

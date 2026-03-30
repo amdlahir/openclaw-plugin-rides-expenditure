@@ -26,6 +26,7 @@
   },
   "devDependencies": {
     "@types/node": "^25.5.0",
+    "openclaw": "file:/home/amin/.nvm/versions/node/v25.8.1/lib/node_modules/openclaw",
     "typescript": "^6.0.2",
     "vitest": "^4.1.2"
   }
