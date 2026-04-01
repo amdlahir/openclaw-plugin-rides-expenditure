@@ -51,14 +51,14 @@ function registerRideTools(api: OpenClawPluginApi, db: Client, config: ReturnTyp
     name: "log_ride",
     label: "Log Ride",
     description:
-      "Log a ride-hailing trip from Grab or Gojek. Use this when the user tells you about a ride they took.",
+      "Log a ride-hailing trip from Grab, Gojek, or Zig. Use this when the user tells you about a ride they took.",
     parameters: {
       type: "object",
       required: ["provider", "amount"],
       properties: {
         provider: {
           type: "string",
-          enum: ["grab", "gojek"],
+          enum: ["grab", "gojek", "zig"],
           description: "Ride-hailing provider",
         },
         amount: {
@@ -110,7 +110,7 @@ function registerRideTools(api: OpenClawPluginApi, db: Client, config: ReturnTyp
         },
         provider: {
           type: "string",
-          enum: ["grab", "gojek"],
+          enum: ["grab", "gojek", "zig"],
           description: "Filter by provider",
         },
         category: {
@@ -280,7 +280,7 @@ function registerRideTools(api: OpenClawPluginApi, db: Client, config: ReturnTyp
 export default definePluginEntry({
   id: "rides",
   name: "Rides Expenditure",
-  description: "Track ride-hailing expenses from Grab and Gojek",
+  description: "Track ride-hailing expenses from Grab, Gojek, and Zig",
   register(api) {
     const config = getConfig(api.pluginConfig);
     const stateDir = api.runtime.state.resolveStateDir();
@@ -325,13 +325,13 @@ export default definePluginEntry({
       name: "sync_ride_emails",
       label: "Sync Ride Emails",
       description:
-        "Sync ride receipts from Gmail. Fetches emails from Grab and Gojek, extracts ride data, and saves new rides. Requires Gmail to be connected via OAuth. By default syncs only new emails since last sync. Use months parameter to sync historical emails.",
+        "Sync ride receipts from Gmail. Fetches emails from Grab, Gojek, and Zig, extracts ride data, and saves new rides. Requires Gmail to be connected via OAuth. By default syncs only new emails since last sync. Use months parameter to sync historical emails.",
       parameters: {
         type: "object",
         properties: {
           provider: {
             type: "string",
-            enum: ["grab", "gojek"],
+            enum: ["grab", "gojek", "zig"],
             description: "Only sync this specific provider. Omit to sync all.",
           },
           months: {
@@ -350,7 +350,7 @@ export default definePluginEntry({
       name: "parse_receipt_screenshot",
       label: "Parse Receipt Screenshot",
       description:
-        "Extract ride data from a receipt screenshot. Send this tool a receipt image from Grab or Gojek and it will extract the provider, amount, date, and locations. After extraction, ask the user to confirm before logging the ride.",
+        "Extract ride data from a receipt screenshot. Send this tool a receipt image from Grab, Gojek, or Zig and it will extract the provider, amount, date, and locations. After extraction, ask the user to confirm before logging the ride.",
       parameters: {
         type: "object",
         required: ["image_url"],

@@ -14,6 +14,11 @@ export const PROVIDERS: Record<
     email: "no-reply@invoicing.gojek.com",
     color: "#00AA13",
   },
+  zig: {
+    name: "Zig",
+    email: "noreply@cdgtaxi.com.sg",
+    color: "#115EF6",
+  },
 };
 
 export const SUPPORTED_CURRENCIES = ["SGD", "USD", "MYR"] as const;

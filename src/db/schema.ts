@@ -3,7 +3,7 @@ import type { Client } from "@libsql/client";
 const RIDES_TABLE = `
 CREATE TABLE IF NOT EXISTS rides (
   id                  INTEGER PRIMARY KEY AUTOINCREMENT,
-  provider            TEXT    NOT NULL CHECK (provider IN ('grab', 'gojek')),
+  provider            TEXT    NOT NULL CHECK (provider IN ('grab', 'gojek', 'zig')),
   original_amount     INTEGER NOT NULL,
   original_currency   TEXT    NOT NULL,
   normalized_amount   INTEGER,
@@ -85,7 +85,32 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_exchange_rates_pair
   ON exchange_rates (from_currency, to_currency);
 `;
 
+async function migrateProviderCheck(db: Client): Promise<void> {
+  // SQLite CHECK constraints can't be altered in-place.
+  // If the rides table exists but lacks 'zig' in the provider CHECK,
+  // recreate the table with the updated constraint, preserving all data.
+  const tableInfo = await db.execute(
+    "SELECT sql FROM sqlite_master WHERE type='table' AND name='rides'",
+  );
+  if (tableInfo.rows.length === 0) return; // table doesn't exist yet, CREATE TABLE will handle it
+  const createSql = tableInfo.rows[0].sql as string;
+  if (createSql.includes("'zig'")) return; // already migrated
+
+  await db.execute("ALTER TABLE rides RENAME TO _rides_old");
+  // RIDES_TABLE uses CREATE TABLE IF NOT EXISTS, but since we renamed, it will create fresh
+  for (const stmt of RIDES_TABLE.split(";").filter((s) => s.trim())) {
+    await db.execute(stmt);
+  }
+  await db.execute(
+    `INSERT INTO rides SELECT * FROM _rides_old`,
+  );
+  await db.execute("DROP TABLE _rides_old");
+}
+
 export async function runMigrations(db: Client): Promise<void> {
+  // Run provider CHECK migration before table creation
+  await migrateProviderCheck(db);
+
   const statements = [
     RIDES_TABLE,
     RIDES_INDEXES,

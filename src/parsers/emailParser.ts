@@ -7,7 +7,7 @@ export interface ParsedRide {
   confidence: number;
 }
 
-export type RideProvider = "grab" | "gojek";
+export type RideProvider = "grab" | "gojek" | "zig";
 
 export type ParseResult =
   | { status: "parsed"; data: ParsedRide }
@@ -264,6 +264,97 @@ export function parseGojekReceipt(
       dropoff = match[1].trim().substring(0, 200);
       confidence += 0.1;
       break;
+    }
+  }
+
+  if (amount === null) return { status: "failed" };
+
+  const date = parseInt(internalDate, 10);
+
+  return {
+    status: "parsed",
+    data: {
+      amount,
+      currency: "SGD",
+      date,
+      pickup,
+      dropoff,
+      confidence: Math.min(confidence, 1.0),
+    },
+  };
+}
+
+export function parseZigReceipt(
+  emailBody: string,
+  internalDate: string,
+): ParseResult {
+  const cleaned = stripHtml(emailBody);
+  const body = cleaned.toLowerCase();
+
+  if (
+    !body.includes("zig") &&
+    !body.includes("cdg") &&
+    !body.includes("comfortdelgro")
+  ) {
+    return { status: "skipped", reason: "not a Zig receipt" };
+  }
+
+  let amount: number | null = null;
+  let pickup: string | null = null;
+  let dropoff: string | null = null;
+  let confidence = 0.5;
+
+  // Amount patterns — prefer "You paid" (final total) over line items
+  const amountPatterns = [
+    /You paid[\s\S]*?\$\s*(\d+(?:\.\d{2})?)/i,
+    /Amount Paid[\s\S]*?\$\s*(\d+(?:\.\d{2})?)/i,
+    /Balance Due[\s\S]*?\$\s*(\d+(?:\.\d{2})?)/i,
+    /s\$\s*(\d+(?:\.\d{2})?)/i,
+    /\$(\d+(?:\.\d{2})?)/,
+  ];
+
+  for (const pattern of amountPatterns) {
+    const match = cleaned.match(pattern);
+    if (match) {
+      amount = Math.round(parseFloat(match[1]) * 100);
+      confidence += 0.2;
+      break;
+    }
+  }
+
+  // Pickup — Zig uses "Pick Up / Drop Off Point @ <location>"
+  const pickupMatch = cleaned.match(
+    /Pick Up\s*\/\s*Drop Off Point\s*@\s*([^\n]+)/i,
+  );
+  if (pickupMatch && pickupMatch[1].trim().length > 3) {
+    pickup = pickupMatch[1].trim().substring(0, 200);
+    confidence += 0.1;
+  }
+
+  // Dropoff — the line after pickup icon/text is the destination address
+  // In stripped text it appears as a standalone address line after the pickup
+  if (!dropoff) {
+    const tripSection = cleaned.match(
+      /TRIP DETAILS[\s\S]*$/i,
+    );
+    if (tripSection) {
+      const section = tripSection[0];
+      // Find all Singapore address-like lines (contain "Singapore" + postal code)
+      const addressLines = section.match(
+        /^[ \t]*(\d+[^,\n]*,\s*Singapore\s+\d{6})$/gim,
+      );
+      if (addressLines && addressLines.length >= 1) {
+        // The last standalone Singapore address that isn't the pickup
+        for (const addr of addressLines) {
+          const trimmed = addr.trim();
+          if (pickup && trimmed === pickup) continue;
+          // Skip if this is part of the pickup line
+          if (pickup && pickup.includes(trimmed)) continue;
+          dropoff = trimmed.substring(0, 200);
+          confidence += 0.1;
+          break;
+        }
+      }
     }
   }
 

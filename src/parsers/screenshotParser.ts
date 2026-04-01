@@ -41,8 +41,8 @@ export function parseGeminiResponse(text: string): unknown {
   }
 }
 
-export function isValidProvider(provider: unknown): provider is "grab" | "gojek" {
-  return typeof provider === "string" && ["grab", "gojek"].includes(provider);
+export function isValidProvider(provider: unknown): provider is "grab" | "gojek" | "zig" {
+  return typeof provider === "string" && ["grab", "gojek", "zig"].includes(provider);
 }
 
 export function isValidAmount(amount: unknown): amount is number {

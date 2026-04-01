@@ -6,7 +6,7 @@ import {
   fetchMessageDetail,
   extractEmailBody,
 } from "./api";
-import { parseGrabReceipt, parseGojekReceipt } from "../parsers/emailParser";
+import { parseGrabReceipt, parseGojekReceipt, parseZigReceipt } from "../parsers/emailParser";
 import { normalizeRideAmount, type FetchRatesFn, fetchRatesFromApi } from "../currency";
 
 export type SyncConfig = {
@@ -26,6 +26,7 @@ export type SyncResult = {
 const PARSERS: Record<string, typeof parseGrabReceipt> = {
   grab: parseGrabReceipt,
   gojek: parseGojekReceipt,
+  zig: parseZigReceipt,
 };
 
 const TOKEN_REFRESH_BUFFER_MS = 5 * 60 * 1000; // 5 minutes

@@ -5,11 +5,11 @@ import {
   isValidFileSize,
 } from "../parsers/screenshotParser";
 
-const EXTRACTION_PROMPT = `Extract ride receipt data from this screenshot. Singapore and Malaysia ride-hailing apps only (Grab, Gojek).
+const EXTRACTION_PROMPT = `Extract ride receipt data from this screenshot. Singapore and Malaysia ride-hailing apps only (Grab, Gojek, Zig/CDG).
 
 Return ONLY valid JSON, no markdown code blocks or other text:
 {
-  "provider": "grab" | "gojek",
+  "provider": "grab" | "gojek" | "zig",
   "amount": <number in dollars, e.g., 15.50 not 1550>,
   "date": "<ISO 8601 format or null if unclear>",
   "pickup": "<pickup address or null>",
@@ -17,7 +17,7 @@ Return ONLY valid JSON, no markdown code blocks or other text:
   "confidence": <0.0-1.0, your confidence in the extraction>
 }
 
-If this is not a valid ride receipt from Grab or Gojek, return:
+If this is not a valid ride receipt from Grab, Gojek, or Zig, return:
 {"error": "not_a_receipt"}`;
 
 export async function handleParseReceiptScreenshot(

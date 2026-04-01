@@ -4,6 +4,7 @@ const GMAIL_API_BASE = "https://gmail.googleapis.com/gmail/v1/users/me";
 export const PROVIDER_EMAILS: Record<string, string> = {
   grab: "no-reply@grab.com",
   gojek: "no-reply@invoicing.gojek.com",
+  zig: "noreply@cdgtaxi.com.sg",
 };
 
 export interface GmailMessage {
@@ -61,6 +62,7 @@ export async function refreshGmailToken(
 export const PROVIDER_SUBJECT_FILTERS: Record<string, string> = {
   grab: "subject:receipt",
   gojek: "subject:(trip OR receipt)",
+  zig: "subject:(ride OR receipt)",
 };
 
 export async function fetchGmailMessages(
