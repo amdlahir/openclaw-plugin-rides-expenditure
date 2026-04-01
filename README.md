@@ -66,8 +66,8 @@ An OpenClaw plugin for tracking ride-hailing expenses from Grab, Gojek, and Zig 
 ### 1. Clone and install dependencies
 
 ```bash
-git clone https://github.com/amdlahir/openclaw-plugin-rides-expenditure.git
-cd openclaw-plugin-rides-expenditure
+git clone https://github.com/amdlahir/openclaw-plugin-rides.git
+cd openclaw-plugin-rides
 npm install
 ```
 
@@ -80,7 +80,7 @@ Add the plugin path and configuration to `~/.openclaw/openclaw.json`:
   "plugins": {
     "allow": ["rides"],
     "load": {
-      "paths": ["/path/to/openclaw-plugin-rides-expenditure"]
+      "paths": ["/path/to/openclaw-plugin-rides"]
     },
     "entries": {
       "rides": {
@@ -264,7 +264,7 @@ The database is stored at `~/.openclaw/rides/rides.db` (SQLite via libSQL). OAut
 ## Project Structure
 
 ```
-openclaw-plugin-rides-expenditure/
+openclaw-plugin-rides/
   openclaw.plugin.json          # Plugin manifest
   package.json                  # Dependencies + openclaw.extensions entry
   vitest.config.ts              # Test runner config
