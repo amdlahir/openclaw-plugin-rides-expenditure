@@ -1,6 +1,7 @@
 import * as path from "path";
 import { createDbClient } from "./db/client";
 import { runMigrations } from "./db/schema";
+import { getTokensPath, readTokens, writeTokens } from "./tokens";
 import {
   handleLogRide,
   handleListRides,
@@ -286,10 +287,32 @@ export default definePluginEntry({
     const stateDir = api.runtime.state.resolveStateDir();
     const dbPath = path.join(stateDir, "rides", "rides.db");
     const db = createDbClient(dbPath);
+    const tokensPath = getTokensPath(dbPath);
 
     api.logger.info(`Initializing rides plugin, DB at: ${dbPath}`);
     runMigrations(db)
-      .then(() => api.logger.info("Database migrations complete"))
+      .then(async () => {
+        api.logger.info("Database migrations complete");
+        // Migrate tokens from DB to file if they exist in DB but not in file
+        if (!readTokens(tokensPath)) {
+          const row = (await db.execute({
+            sql: "SELECT gmail_access_token, gmail_refresh_token, gmail_token_expires_at FROM sync_state WHERE id = 1",
+            args: [],
+          })).rows[0];
+          if (row?.gmail_access_token && row?.gmail_refresh_token) {
+            writeTokens(tokensPath, {
+              accessToken: row.gmail_access_token as string,
+              refreshToken: row.gmail_refresh_token as string,
+              expiresAt: Number(row.gmail_token_expires_at),
+            });
+            await db.execute({
+              sql: "UPDATE sync_state SET gmail_access_token = NULL, gmail_refresh_token = NULL, gmail_token_expires_at = NULL WHERE id = 1",
+              args: [],
+            });
+            api.logger.info("Migrated OAuth tokens from DB to tokens.json");
+          }
+        }
+      })
       .catch((err) => api.logger.error(`Migration failed: ${err}`));
 
     registerRideTools(api, db, config);
@@ -308,7 +331,7 @@ export default definePluginEntry({
     });
     api.registerHttpRoute({
       path: "/rides/gmail/callback",
-      handler: createCallbackHandler(db, oauthConfig),
+      handler: createCallbackHandler(db, oauthConfig, tokensPath),
       auth: "plugin",
       match: "exact",
     });
@@ -341,7 +364,7 @@ export default definePluginEntry({
         },
       },
       execute: wrapExecute((params) =>
-        handleSyncRideEmails(db, syncConfig, params.provider as string | undefined, params.months as number | undefined),
+        handleSyncRideEmails(db, syncConfig, params.provider as string | undefined, params.months as number | undefined, tokensPath),
       ),
     });
 
@@ -373,7 +396,7 @@ export default definePluginEntry({
     api.registerCommand(createRidesCommand(db));
     api.registerCommand(createRidesStatsCommand(db));
     api.registerCommand(
-      createRidesSyncCommand(db, (months) => syncEmails(db, syncConfig, undefined, months)),
+      createRidesSyncCommand(db, (months) => syncEmails(db, syncConfig, undefined, months, undefined, tokensPath)),
     );
     api.registerCommand(createRidesResetCommand(db));
 

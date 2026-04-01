@@ -7,6 +7,7 @@ export function createEmailSyncService(
   db: Client,
   config: SyncConfig,
   intervalMinutes: number,
+  tokensPath?: string,
 ) {
   return {
     id: "rides-email-sync",
@@ -22,11 +23,11 @@ export function createEmailSyncService(
       }
 
       // Run immediate sync
-      await syncEmails(db, config);
+      await syncEmails(db, config, undefined, undefined, undefined, tokensPath);
 
       // Schedule recurring sync
       syncInterval = setInterval(
-        () => syncEmails(db, config),
+        () => syncEmails(db, config, undefined, undefined, undefined, tokensPath),
         intervalMinutes * 60 * 1000,
       );
     },

@@ -8,6 +8,7 @@ import {
 } from "./api";
 import { parseGrabReceipt, parseGojekReceipt, parseZigReceipt } from "../parsers/emailParser";
 import { normalizeRideAmount, type FetchRatesFn, fetchRatesFromApi } from "../currency";
+import { readTokens, writeTokens } from "../tokens";
 
 export type SyncConfig = {
   googleClientId: string;
@@ -37,14 +38,15 @@ export async function syncEmails(
   provider?: string,
   months?: number,
   fetchRates: FetchRatesFn = fetchRatesFromApi,
+  tokensPath?: string,
 ): Promise<SyncResult> {
   const errors: string[] = [];
   let totalProcessed = 0;
   let totalCreated = 0;
 
-  // Read sync state
+  // Read sync state from DB (non-token fields)
   const stateResult = await db.execute({
-    sql: "SELECT gmail_access_token, gmail_refresh_token, gmail_token_expires_at, email_sync_enabled, last_sync_at FROM sync_state WHERE id = 1",
+    sql: "SELECT email_sync_enabled, last_sync_at FROM sync_state WHERE id = 1",
     args: [],
   });
 
@@ -53,14 +55,16 @@ export async function syncEmails(
     return { success: false, emails_processed: 0, rides_created: 0, errors: ["Email sync not enabled"] };
   }
 
-  let accessToken = state.gmail_access_token as string;
-  const refreshToken = state.gmail_refresh_token as string;
-  const tokenExpiresAt = Number(state.gmail_token_expires_at);
-  const lastSyncAt = state.last_sync_at ? Number(state.last_sync_at) : undefined;
-
-  if (!accessToken || !refreshToken) {
+  // Read tokens from file
+  const tokens = tokensPath ? readTokens(tokensPath) : null;
+  if (!tokens) {
     return { success: false, emails_processed: 0, rides_created: 0, errors: ["Gmail not connected"] };
   }
+
+  let accessToken = tokens.accessToken;
+  const refreshToken = tokens.refreshToken;
+  const tokenExpiresAt = tokens.expiresAt;
+  const lastSyncAt = state.last_sync_at ? Number(state.last_sync_at) : undefined;
 
   // Refresh token if needed
   if (Date.now() > tokenExpiresAt - TOKEN_REFRESH_BUFFER_MS) {
@@ -71,10 +75,9 @@ export async function syncEmails(
         config.googleClientSecret,
       );
       accessToken = refreshed.accessToken;
-      await db.execute({
-        sql: "UPDATE sync_state SET gmail_access_token = ?, gmail_token_expires_at = ? WHERE id = 1",
-        args: [refreshed.accessToken, refreshed.expiresAt],
-      });
+      if (tokensPath) {
+        writeTokens(tokensPath, { accessToken: refreshed.accessToken, refreshToken, expiresAt: refreshed.expiresAt });
+      }
     } catch (err) {
       return {
         success: false,

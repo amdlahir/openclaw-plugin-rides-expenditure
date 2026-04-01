@@ -3,6 +3,7 @@ import type { IncomingMessage, ServerResponse } from "http";
 type HttpRouteHandler = (req: IncomingMessage, res: ServerResponse) => Promise<boolean | void> | boolean | void;
 import type { Client } from "@libsql/client";
 import { buildGmailAuthUrl, exchangeCodeForTokens, generateNonce, type OAuthConfig } from "../gmail/oauth";
+import { writeTokens } from "../tokens";
 
 function parseQueryParams(url: string): URLSearchParams {
   const idx = url.indexOf("?");
@@ -25,7 +26,7 @@ export function createAuthHandler(db: Client, config: OAuthConfig): HttpRouteHan
   };
 }
 
-export function createCallbackHandler(db: Client, config: OAuthConfig): HttpRouteHandler {
+export function createCallbackHandler(db: Client, config: OAuthConfig, tokensPath: string): HttpRouteHandler {
   return async (req, res) => {
     const params = parseQueryParams(req.url || "");
     const code = params.get("code");
@@ -52,15 +53,19 @@ export function createCallbackHandler(db: Client, config: OAuthConfig): HttpRout
     try {
       const tokens = await exchangeCodeForTokens(code, config);
 
+      // Write tokens to separate file (not the DB)
+      writeTokens(tokensPath, {
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        expiresAt: tokens.expiresAt,
+      });
+
       await db.execute({
         sql: `UPDATE sync_state SET
-                gmail_access_token = ?,
-                gmail_refresh_token = ?,
-                gmail_token_expires_at = ?,
                 email_sync_enabled = 1,
                 oauth_nonce = NULL
               WHERE id = 1`,
-        args: [tokens.accessToken, tokens.refreshToken, tokens.expiresAt],
+        args: [],
       });
 
       res.writeHead(200, { "Content-Type": "text/html" });

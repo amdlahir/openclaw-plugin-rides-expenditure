@@ -6,6 +6,7 @@ export async function handleSyncRideEmails(
   config: SyncConfig,
   provider?: string,
   months?: number,
+  tokensPath?: string,
 ) {
-  return syncEmails(db, config, provider, months);
+  return syncEmails(db, config, provider, months, undefined, tokensPath);
 }
