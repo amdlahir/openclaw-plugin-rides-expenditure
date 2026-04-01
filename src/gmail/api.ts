@@ -3,7 +3,7 @@ const GMAIL_API_BASE = "https://gmail.googleapis.com/gmail/v1/users/me";
 
 export const PROVIDER_EMAILS: Record<string, string> = {
   grab: "no-reply@grab.com",
-  gojek: "receipts@gojek.com",
+  gojek: "no-reply@invoicing.gojek.com",
 };
 
 export interface GmailMessage {
@@ -58,12 +58,19 @@ export async function refreshGmailToken(
   };
 }
 
+export const PROVIDER_SUBJECT_FILTERS: Record<string, string> = {
+  grab: "subject:receipt",
+  gojek: "subject:(trip OR receipt)",
+};
+
 export async function fetchGmailMessages(
   accessToken: string,
   providerEmail: string,
   afterDate?: number,
+  provider?: string,
 ): Promise<GmailMessage[]> {
-  let query = `from:${providerEmail} subject:receipt`;
+  const subjectFilter = (provider && PROVIDER_SUBJECT_FILTERS[provider]) || "subject:receipt";
+  let query = `from:${providerEmail} ${subjectFilter}`;
   if (afterDate) {
     const dateStr = new Date(afterDate).toISOString().split("T")[0];
     query += ` after:${dateStr}`;

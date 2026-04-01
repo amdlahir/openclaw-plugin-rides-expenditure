@@ -102,7 +102,7 @@ export async function syncEmails(
     if (!providerEmail) continue;
 
     try {
-      const messages = await fetchGmailMessages(accessToken, providerEmail, afterDate);
+      const messages = await fetchGmailMessages(accessToken, providerEmail, afterDate, prov);
 
       for (const msg of messages) {
         try {

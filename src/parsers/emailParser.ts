@@ -208,8 +208,10 @@ export function parseGojekReceipt(
   let dropoff: string | null = null;
   let confidence = 0.5;
 
-  // SGD amount patterns only
+  // SGD amount patterns — prefer "total paid/payment" over line items like "trip fare"
   const amountPatterns = [
+    /total\s+paid[\s\S]*?s?\$\s*(\d+(?:\.\d{2})?)/i,
+    /total\s+payment[\s\S]*?s?\$\s*(\d+(?:\.\d{2})?)/i,
     /total[:\s]*s?\$\s*(\d+(?:\.\d{2})?)/i,
     /fare[:\s]*s?\$\s*(\d+(?:\.\d{2})?)/i,
     /s\$\s*(\d+(?:\.\d{2})?)/i,
@@ -226,8 +228,9 @@ export function parseGojekReceipt(
     }
   }
 
-  // Extract pickup location
+  // Extract pickup location — Gojek SG uses "Picked up on <date> from\n<address>"
   const pickupPatterns = [
+    /Picked up[\s\S]*?from\s*\n\s*([^\n]+)/i,
     /pick[\s-]*up[:\s]*([^\n]+)/i,
     /from[:\s]*([^\n]+)/i,
     /penjemputan[:\s]*([^\n]+)/i,
@@ -244,8 +247,9 @@ export function parseGojekReceipt(
     }
   }
 
-  // Extract dropoff location
+  // Extract dropoff location — Gojek SG uses "Arrived on <date> at\n<address>"
   const dropoffPatterns = [
+    /Arrived[\s\S]*?at\s*\n\s*([^\n]+)/i,
     /drop[\s-]*off[:\s]*([^\n]+)/i,
     /tujuan[:\s]*([^\n]+)/i,
     /titik antar[:\s]*([^\n]+)/i,

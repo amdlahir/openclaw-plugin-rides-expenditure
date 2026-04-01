@@ -11,7 +11,7 @@ export const PROVIDERS: Record<
   },
   gojek: {
     name: "Gojek",
-    email: "no-reply@gojek.com",
+    email: "no-reply@invoicing.gojek.com",
     color: "#00AA13",
   },
 };
