@@ -8,9 +8,9 @@ An OpenClaw plugin for tracking ride-hailing expenses from Grab, Gojek, and Zig 
 >
 > **What this means:**
 > - The plugin itself only reads emails matching specific provider sender addresses with ride-related subjects
-> - However, the OAuth token stored in `~/.openclaw/rides/rides.db` could theoretically be used to read any email
-> - The token is stored in plaintext in a local SQLite file on your machine
-> - Anyone with access to your machine (or the DB file) could use the token to read your emails
+> - However, the OAuth token stored in `~/.openclaw/rides/tokens.json` could theoretically be used to read any email
+> - The token is stored in plaintext in a local file on your machine (with restricted `0o600` permissions)
+> - Anyone with access to your machine (or the token file) could use the token to read your emails
 >
 > **Token storage details:**
 > - OAuth tokens are stored in a **separate file** (`~/.openclaw/rides/tokens.json`), not in the rides database -- this means `rides.db` is safe to back up without exposing credentials
