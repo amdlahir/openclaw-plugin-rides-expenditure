@@ -2,13 +2,13 @@
   "name": "rides",
   "version": "0.1.0",
   "description": "OpenClaw plugin for ride-hailing expense tracking",
-  "homepage": "https://github.com/amdlahir/openclaw-plugin-rides-expenditure#readme",
+  "homepage": "https://github.com/amdlahir/openclaw-plugin-rides#readme",
   "bugs": {
-    "url": "https://github.com/amdlahir/openclaw-plugin-rides-expenditure/issues"
+    "url": "https://github.com/amdlahir/openclaw-plugin-rides/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/amdlahir/openclaw-plugin-rides-expenditure.git"
+    "url": "git+https://github.com/amdlahir/openclaw-plugin-rides.git"
   },
   "license": "MIT",
   "author": "Amin",
