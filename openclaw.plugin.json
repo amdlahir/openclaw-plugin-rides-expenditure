@@ -1,5 +1,7 @@
 {
   "id": "rides",
+  "name": "Rides",
+  "description": "Track Singapore ride-hailing expenses by syncing Gmail receipts and parsing screenshots. Supports Grab, Gojek, and more with budget tracking and currency conversion.",
   "skills": ["./skills"],
   "configSchema": {
     "type": "object",
