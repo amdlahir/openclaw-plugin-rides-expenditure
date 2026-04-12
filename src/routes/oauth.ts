@@ -12,6 +12,14 @@ function parseQueryParams(url: string): URLSearchParams {
 
 export function createAuthHandler(db: Client, config: OAuthConfig): HttpRouteHandler {
   return async (_req, res) => {
+    if (!config.googleClientId || !config.googleClientSecret || !config.baseUrl) {
+      res.writeHead(503, { "Content-Type": "text/html" });
+      res.end(
+        "<h1>Gmail Not Configured</h1><p>Set <code>googleClientId</code>, <code>googleClientSecret</code>, and <code>baseUrl</code> in the plugin config to enable Gmail sync.</p>",
+      );
+      return true;
+    }
+
     const nonce = generateNonce();
 
     await db.execute({
@@ -28,6 +36,14 @@ export function createAuthHandler(db: Client, config: OAuthConfig): HttpRouteHan
 
 export function createCallbackHandler(db: Client, config: OAuthConfig, tokensPath: string): HttpRouteHandler {
   return async (req, res) => {
+    if (!config.googleClientId || !config.googleClientSecret || !config.baseUrl) {
+      res.writeHead(503, { "Content-Type": "text/html" });
+      res.end(
+        "<h1>Gmail Not Configured</h1><p>Set <code>googleClientId</code>, <code>googleClientSecret</code>, and <code>baseUrl</code> in the plugin config to enable Gmail sync.</p>",
+      );
+      return true;
+    }
+
     const params = parseQueryParams(req.url || "");
     const code = params.get("code");
     const state = params.get("state");

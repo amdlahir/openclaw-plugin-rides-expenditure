@@ -52,6 +52,6 @@
         "default": 15
       }
     },
-    "required": ["googleClientId", "googleClientSecret", "baseUrl"]
+    "required": []
   }
 }
