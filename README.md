@@ -156,39 +156,62 @@ Gmail sync requires a Google Cloud OAuth2 client. Follow these steps:
 
 ### 2. Enable the Gmail API
 
-1. Go to **APIs & Services** > **Library**
-2. Search for "Gmail API"
-3. Click **Enable**
+1. Click the **hamburger menu** (top-left) or the **Google Cloud logo** to go to the dashboard
+2. Go to **APIs & Services** > **Library**
+3. Search for "Gmail API"
+4. Click **Enable**
 
 ### 3. Configure the OAuth consent screen
 
-1. Go to **APIs & Services** > **OAuth consent screen**
+1. Click the **hamburger menu** (top-left) or the **Google Cloud logo** to go to the dashboard
+2. Go to **APIs & Services** > **OAuth consent screen**
 2. Select **External** user type (or Internal if using Google Workspace)
-3. Fill in the required fields:
-   - App name: "OpenClaw Rides" (or anything you like)
-   - User support email: your email
-   - Developer contact: your email
-4. On the **Scopes** step, add: `https://www.googleapis.com/auth/gmail.readonly`
-5. On the **Test users** step, add your Gmail address
-6. Save and continue
+3. Fill in the required fields: App name, User support email, Developer contact email
+4. Click **Create**
 
-### 4. Create OAuth2 credentials
+### 4. Add test users
+
+1. Click the **hamburger menu** (top-left) or the **Google Cloud logo** to go to the dashboard
+2. Go to **APIs & Services** > **OAuth consent screen** > **Audience**
+2. Click **Add Users** and add the Gmail account that receives your ride receipt emails
+3. Save
+
+Only test users can authorize the app while it is in Testing mode.
+
+### 5. Create OAuth2 credentials
 
 1. Go to **APIs & Services** > **Credentials**
 2. Click **Create Credentials** > **OAuth client ID**
 3. Application type: **Web application**
 4. Name: "OpenClaw Rides" (or anything)
-5. Under **Authorized redirect URIs**, add your callback URL:
-   - For localhost: `http://localhost:18789/rides/gmail/callback`
-   - For a public server: `https://your-domain.com/rides/gmail/callback`
+5. Under **Authorized redirect URIs**, add: `http://localhost:18789/rides/gmail/callback`
 6. Click **Create**
 7. Copy the **Client ID** and **Client Secret**
 
-### 5. Add credentials to plugin config
+### 6. Add credentials to plugin config
 
-Update `~/.openclaw/openclaw.json` with your Client ID and Client Secret in the `rides` plugin config (see Installation step 2).
+Edit `~/.openclaw/openclaw.json` and add the credentials under `plugins.entries.rides.config`:
 
-### 6. Connect your Gmail account
+```json
+{
+  "plugins": {
+    "entries": {
+      "rides": {
+        "enabled": true,
+        "config": {
+          "googleClientId": "YOUR_CLIENT_ID",
+          "googleClientSecret": "YOUR_CLIENT_SECRET",
+          "baseUrl": "http://localhost:18789"
+        }
+      }
+    }
+  }
+}
+```
+
+Merge into your existing config -- do not replace the whole file. Then restart the gateway: `openclaw gateway restart`.
+
+### 7. Connect your Gmail account
 
 1. Make sure OpenClaw gateway is running
 2. If your OpenClaw is on a remote server, set up an SSH tunnel:
@@ -199,7 +222,7 @@ Update `~/.openclaw/openclaw.json` with your Client ID and Client Secret in the 
 4. Complete the Google consent screen
 5. You should see "Gmail Connected" on success
 
-### 7. Sync your emails
+### 8. Sync your emails
 
 In your chat (Telegram, WhatsApp, etc.), use:
 - `/rides_sync` -- slash command (instant, no AI)
@@ -371,7 +394,7 @@ Use `/rides_disconnect` to remove your stored OAuth tokens and disable email syn
 
 `/rides_disconnect` only deletes **local** tokens. The app still appears in your Google account's authorized apps until you also revoke it at [Google Account > Security > Third-party apps](https://myaccount.google.com/permissions). For full cleanup, do both.
 
-To reconnect later, visit `{baseUrl}/rides/gmail/auth` in your browser (see Step 6 under "Setting Up Google Cloud").
+To reconnect later, visit `{baseUrl}/rides/gmail/auth` in your browser (see Step 7 under "Setting Up Google Cloud").
 
 ## Uninstalling
 

@@ -22,5 +22,5 @@ export async function checkGmailSetupNotification(db: Client): Promise<string | 
     args: [NOTIFICATION_KEY, String(Date.now())],
   });
 
-  return "The user hasn't connected Gmail yet. You can automatically import ride receipts from Grab, Gojek, and Zig emails. Mention this capability and suggest they connect their Gmail account to get started.";
+  return "The user hasn't connected Gmail yet. You can automatically import ride receipts from Grab, Gojek, and Zig emails. Mention this capability and offer to walk them through the Gmail setup process step by step.";
 }

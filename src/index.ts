@@ -349,6 +349,7 @@ export default definePluginEntry({
       const gmailSetup = await checkGmailSetupNotification(db);
       const messages = [syncErrors, gmailSetup].filter((m): m is string => m != null);
       if (messages.length > 0) {
+        api.logger.info(`[rides] injecting ${messages.length} notification(s) into prompt: ${messages.join(" | ")}`);
         return { appendSystemContext: messages.join("\n\n") };
       }
     });

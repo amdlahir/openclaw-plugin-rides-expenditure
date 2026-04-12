@@ -97,6 +97,92 @@ Mention these to the user when they want quick access without a conversational r
 
 - **Screenshot confirmation:** Always present extracted screenshot data to the user and ask for confirmation before logging. Never auto-log from a screenshot.
 - **Budget not set:** If `get_budget_status` returns `has_budget: false`, tell the user they haven't set a budget yet and offer to help them set one.
-- **Gmail not connected:** If `sync_ride_emails` returns an error about sync not being enabled or Gmail not connected, tell the user to visit the OAuth setup URL to connect their Gmail account.
+- **Gmail not connected:** If `sync_ride_emails` returns an error about sync not being enabled or Gmail not connected, guide the user through the full setup process (see Gmail Setup Guide below).
 - **Currency conversion:** When rides are in a different currency than the budget currency, they are automatically converted using cached exchange rates. If a ride has `normalized_amount: null`, the exchange rate was unavailable at the time and will be backfilled later.
 - **Amounts:** The tools accept amounts in dollars (e.g., 15.50), not cents. The tools return amounts in dollars too.
+
+## Gmail Setup Guide
+
+When Gmail is not connected and the user wants to sync emails, **first present the security notice below**, then wait for the user to acknowledge before walking them through the setup steps one at a time. Wait for the user to complete each step before moving to the next.
+
+### Before you start: Security notice
+
+Present this to the user before beginning setup. Keep it concise but cover the key points:
+
+> **Before connecting Gmail, here's what you should know:**
+>
+> This integration requests **read-only access to your entire Gmail inbox** (`gmail.readonly` scope). While the plugin only searches for ride receipts from Grab, Gojek, and Zig, the OAuth token itself can technically access all your emails.
+>
+> - The token is stored in plaintext at `~/.openclaw/rides/tokens.json` (with restricted file permissions)
+> - The refresh token **never expires** unless you explicitly revoke it
+> - If `tokens.json` gets included in cloud backups or file sync, the token travels with it
+>
+> **Recommendations:** Only connect Gmail on a machine you trust. Exclude `~/.openclaw/rides/tokens.json` from cloud backup and file sync. You can disconnect anytime with `/rides_disconnect` and revoke access at [Google Account Security](https://myaccount.google.com/permissions).
+>
+> Gmail sync is entirely optional -- you can always log rides manually or via screenshots.
+
+Ask the user if they'd like to proceed. If they say yes, start the setup steps below.
+
+### Step 1: Create a Google Cloud project
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project (or use an existing one), e.g. "OpenClaw Rides"
+
+### Step 2: Enable the Gmail API
+
+1. Go to **APIs & Services** > **Library**
+2. Search for "Gmail API" and click **Enable**
+
+### Step 3: Configure the OAuth consent screen
+
+1. Go to **APIs & Services** > **OAuth consent screen**
+2. Select **External** user type (or Internal if using Google Workspace)
+3. Fill in the required fields: App name, User support email, Developer contact email
+4. Click **Create**
+
+### Step 4: Add test users
+
+1. Go to **APIs & Services** > **OAuth consent screen** > **Audience**
+2. Click **Add Users** and add the Gmail account that receives your ride receipt emails
+3. Save
+
+Only test users can authorize the app while it is in Testing mode.
+
+### Step 5: Create OAuth2 credentials
+
+1. Go to **APIs & Services** > **Credentials**
+2. Click **Create Credentials** > **OAuth client ID**
+3. Application type: **Web application**
+4. Under **Authorized redirect URIs**, add: `{baseUrl}/rides/gmail/callback` (e.g. `http://localhost:18789/rides/gmail/callback`)
+5. Click **Create**, then copy the **Client ID** and **Client Secret**
+
+### Step 6: Add credentials to plugin config
+
+Tell the user to edit `~/.openclaw/openclaw.json` and add credentials under `plugins.entries.rides.config`:
+
+```json
+{
+  "plugins": {
+    "entries": {
+      "rides": {
+        "enabled": true,
+        "config": {
+          "googleClientId": "YOUR_CLIENT_ID",
+          "googleClientSecret": "YOUR_CLIENT_SECRET",
+          "baseUrl": "http://localhost:18789"
+        }
+      }
+    }
+  }
+}
+```
+
+Merge into their existing config -- do not replace the whole file. Then restart the gateway.
+
+### Step 7: Connect Gmail
+
+1. Open browser to: `{baseUrl}/rides/gmail/auth`
+2. Complete the Google consent screen
+3. They should see "Gmail Connected" on success
+
+After connecting, they can sync emails with `/rides_sync` or by asking you to sync.
