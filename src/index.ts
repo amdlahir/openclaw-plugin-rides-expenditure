@@ -26,6 +26,7 @@ import {
 } from "./commands/index";
 import { definePluginEntry } from "openclaw/plugin-sdk/plugin-entry";
 import type { OpenClawPluginApi } from "openclaw/plugin-sdk/plugin-entry";
+import { Type } from "@sinclair/typebox";
 import type { Client } from "@libsql/client";
 
 function getConfig(pluginConfig?: Record<string, unknown>) {
@@ -54,37 +55,27 @@ function registerRideTools(api: OpenClawPluginApi, db: Client, config: ReturnTyp
     label: "Log Ride",
     description:
       "Log a ride-hailing trip from Grab, Gojek, or Zig. Use this when the user tells you about a ride they took.",
-    parameters: {
-      type: "object",
-      required: ["provider", "amount"],
-      properties: {
-        provider: {
-          type: "string",
-          enum: ["grab", "gojek", "zig"],
-          description: "Ride-hailing provider",
-        },
-        amount: {
-          type: "number",
-          description: "Fare amount (e.g., 15.50, not cents)",
-        },
-        currency: {
-          type: "string",
-          enum: ["SGD", "USD", "MYR"],
-          description: `Currency code. Defaults to ${config.defaultCurrency}.`,
-        },
-        date: {
-          type: "string",
-          description: "Trip date in ISO 8601 format. Defaults to now.",
-        },
-        pickup: { type: "string", description: "Pickup location" },
-        dropoff: { type: "string", description: "Dropoff location" },
-        category: {
-          type: "string",
-          enum: ["work", "personal"],
-          description: `Trip category. Defaults to ${config.defaultCategory}.`,
-        },
-      },
-    },
+    parameters: Type.Object({
+      provider: Type.Unsafe<string>({
+        type: "string",
+        enum: ["grab", "gojek", "zig"],
+        description: "Ride-hailing provider",
+      }),
+      amount: Type.Number({ description: "Fare amount (e.g., 15.50, not cents)" }),
+      currency: Type.Unsafe<string | undefined>({
+        type: "string",
+        enum: ["SGD", "USD", "MYR"],
+        description: `Currency code. Defaults to ${config.defaultCurrency}.`,
+      }),
+      date: Type.Optional(Type.String({ description: "Trip date in ISO 8601 format. Defaults to now." })),
+      pickup: Type.Optional(Type.String({ description: "Pickup location" })),
+      dropoff: Type.Optional(Type.String({ description: "Dropoff location" })),
+      category: Type.Unsafe<"work" | "personal" | undefined>({
+        type: "string",
+        enum: ["work", "personal"],
+        description: `Trip category. Defaults to ${config.defaultCategory}.`,
+      }),
+    }),
     execute: wrapExecute((params) =>
       handleLogRide(db, config, {
         provider: params.provider as string,
@@ -103,33 +94,21 @@ function registerRideTools(api: OpenClawPluginApi, db: Client, config: ReturnTyp
     label: "List Rides",
     description:
       "List recent ride-hailing trips. Supports filtering by provider, category, and date range.",
-    parameters: {
-      type: "object",
-      properties: {
-        limit: {
-          type: "number",
-          description: "Max rides to return (default 10, max 50)",
-        },
-        provider: {
-          type: "string",
-          enum: ["grab", "gojek", "zig"],
-          description: "Filter by provider",
-        },
-        category: {
-          type: "string",
-          enum: ["work", "personal"],
-          description: "Filter by category",
-        },
-        start_date: {
-          type: "string",
-          description: "Start date filter (ISO 8601)",
-        },
-        end_date: {
-          type: "string",
-          description: "End date filter (ISO 8601)",
-        },
-      },
-    },
+    parameters: Type.Object({
+      limit: Type.Optional(Type.Number({ description: "Max rides to return (default 10, max 50)" })),
+      provider: Type.Unsafe<string | undefined>({
+        type: "string",
+        enum: ["grab", "gojek", "zig"],
+        description: "Filter by provider",
+      }),
+      category: Type.Unsafe<"work" | "personal" | undefined>({
+        type: "string",
+        enum: ["work", "personal"],
+        description: "Filter by category",
+      }),
+      start_date: Type.Optional(Type.String({ description: "Start date filter (ISO 8601)" })),
+      end_date: Type.Optional(Type.String({ description: "End date filter (ISO 8601)" })),
+    }),
     execute: wrapExecute((params) =>
       handleListRides(db, {
         limit: params.limit as number | undefined,
@@ -146,20 +125,10 @@ function registerRideTools(api: OpenClawPluginApi, db: Client, config: ReturnTyp
     label: "Search Rides",
     description:
       "Search rides by pickup or dropoff location. Use when the user asks about rides to/from a specific place.",
-    parameters: {
-      type: "object",
-      required: ["query"],
-      properties: {
-        query: {
-          type: "string",
-          description: "Location search term (e.g., 'Orchard', 'MBS', 'Airport')",
-        },
-        limit: {
-          type: "number",
-          description: "Max results (default 10)",
-        },
-      },
-    },
+    parameters: Type.Object({
+      query: Type.String({ description: "Location search term (e.g., 'Orchard', 'MBS', 'Airport')" }),
+      limit: Type.Optional(Type.Number({ description: "Max results (default 10)" })),
+    }),
     execute: wrapExecute((params) =>
       handleSearchRides(db, {
         query: params.query as string,
@@ -172,17 +141,16 @@ function registerRideTools(api: OpenClawPluginApi, db: Client, config: ReturnTyp
     name: "update_ride",
     label: "Update Ride",
     description: "Update details of an existing ride (amount, category, locations).",
-    parameters: {
-      type: "object",
-      required: ["ride_id"],
-      properties: {
-        ride_id: { type: "number", description: "ID of the ride to update" },
-        amount: { type: "number", description: "New fare amount" },
-        category: { type: "string", enum: ["work", "personal"] },
-        pickup: { type: "string", description: "New pickup location" },
-        dropoff: { type: "string", description: "New dropoff location" },
-      },
-    },
+    parameters: Type.Object({
+      ride_id: Type.Number({ description: "ID of the ride to update" }),
+      amount: Type.Optional(Type.Number({ description: "New fare amount" })),
+      category: Type.Unsafe<"work" | "personal" | undefined>({
+        type: "string",
+        enum: ["work", "personal"],
+      }),
+      pickup: Type.Optional(Type.String({ description: "New pickup location" })),
+      dropoff: Type.Optional(Type.String({ description: "New dropoff location" })),
+    }),
     execute: wrapExecute((params) =>
       handleUpdateRide(db, {
         ride_id: params.ride_id as number,
@@ -198,13 +166,9 @@ function registerRideTools(api: OpenClawPluginApi, db: Client, config: ReturnTyp
     name: "delete_ride",
     label: "Delete Ride",
     description: "Delete a ride record. This cannot be undone.",
-    parameters: {
-      type: "object",
-      required: ["ride_id"],
-      properties: {
-        ride_id: { type: "number", description: "ID of the ride to delete" },
-      },
-    },
+    parameters: Type.Object({
+      ride_id: Type.Number({ description: "ID of the ride to delete" }),
+    }),
     execute: wrapExecute((params) =>
       handleDeleteRide(db, params.ride_id as number),
     ),
@@ -215,19 +179,15 @@ function registerRideTools(api: OpenClawPluginApi, db: Client, config: ReturnTyp
     label: "Ride Spending Stats",
     description:
       "Get ride spending statistics for a date range. Can break down by provider, category, or month.",
-    parameters: {
-      type: "object",
-      required: ["start_date", "end_date"],
-      properties: {
-        start_date: { type: "string", description: "Start date (ISO 8601)" },
-        end_date: { type: "string", description: "End date (ISO 8601)" },
-        group_by: {
-          type: "string",
-          enum: ["provider", "category", "month"],
-          description: "How to break down the stats (default: provider)",
-        },
-      },
-    },
+    parameters: Type.Object({
+      start_date: Type.String({ description: "Start date (ISO 8601)" }),
+      end_date: Type.String({ description: "End date (ISO 8601)" }),
+      group_by: Type.Unsafe<"provider" | "category" | "month" | undefined>({
+        type: "string",
+        enum: ["provider", "category", "month"],
+        description: "How to break down the stats (default: provider)",
+      }),
+    }),
     execute: wrapExecute((params) =>
       handleSpendingStats(db, {
         start_date: params.start_date as string,
@@ -241,25 +201,15 @@ function registerRideTools(api: OpenClawPluginApi, db: Client, config: ReturnTyp
     name: "set_ride_budget",
     label: "Set Ride Budget",
     description: "Set a monthly ride spending budget. This replaces any existing budget.",
-    parameters: {
-      type: "object",
-      required: ["monthly_limit"],
-      properties: {
-        monthly_limit: {
-          type: "number",
-          description: "Monthly limit in dollars (e.g., 500 for $500)",
-        },
-        alert_threshold: {
-          type: "number",
-          description: "Alert when spending exceeds this fraction (0.0-1.0, default 0.8)",
-        },
-        currency: {
-          type: "string",
-          enum: ["SGD", "USD", "MYR"],
-          description: `Budget currency. Defaults to ${config.defaultCurrency}. Changing currency recomputes all ride totals.`,
-        },
-      },
-    },
+    parameters: Type.Object({
+      monthly_limit: Type.Number({ description: "Monthly limit in dollars (e.g., 500 for $500)" }),
+      alert_threshold: Type.Optional(Type.Number({ description: "Alert when spending exceeds this fraction (0.0-1.0, default 0.8)" })),
+      currency: Type.Unsafe<string | undefined>({
+        type: "string",
+        enum: ["SGD", "USD", "MYR"],
+        description: `Budget currency. Defaults to ${config.defaultCurrency}. Changing currency recomputes all ride totals.`,
+      }),
+    }),
     execute: wrapExecute((params) =>
       handleSetBudget(db, config, {
         monthly_limit: params.monthly_limit as number,
@@ -274,7 +224,7 @@ function registerRideTools(api: OpenClawPluginApi, db: Client, config: ReturnTyp
     label: "Get Budget Status",
     description:
       "Get current month's ride spending relative to the budget. Shows total spent, remaining, and whether the alert threshold has been exceeded.",
-    parameters: { type: "object", properties: {} },
+    parameters: Type.Object({}),
     execute: wrapExecute(() => handleGetBudgetStatus(db)),
   });
 }
@@ -350,20 +300,14 @@ export default definePluginEntry({
       label: "Sync Ride Emails",
       description:
         "Sync ride receipts from Gmail. Fetches emails from Grab, Gojek, and Zig, extracts ride data, and saves new rides. Requires Gmail to be connected via OAuth. By default syncs only new emails since last sync. Use months parameter to sync historical emails.",
-      parameters: {
-        type: "object",
-        properties: {
-          provider: {
-            type: "string",
-            enum: ["grab", "gojek", "zig"],
-            description: "Only sync this specific provider. Omit to sync all.",
-          },
-          months: {
-            type: "number",
-            description: "Number of months of history to sync (e.g., 6 for last 6 months). Omit to sync only new emails since last sync.",
-          },
-        },
-      },
+      parameters: Type.Object({
+        provider: Type.Unsafe<string | undefined>({
+          type: "string",
+          enum: ["grab", "gojek", "zig"],
+          description: "Only sync this specific provider. Omit to sync all.",
+        }),
+        months: Type.Optional(Type.Number({ description: "Number of months of history to sync (e.g., 6 for last 6 months). Omit to sync only new emails since last sync." })),
+      }),
       execute: wrapExecute((params) =>
         handleSyncRideEmails(db, syncConfig, params.provider as string | undefined, params.months as number | undefined, tokensPath),
       ),
@@ -375,16 +319,9 @@ export default definePluginEntry({
       label: "Parse Receipt Screenshot",
       description:
         "Extract ride data from a receipt screenshot. Send this tool a receipt image from Grab, Gojek, or Zig and it will extract the provider, amount, date, and locations. After extraction, ask the user to confirm before logging the ride.",
-      parameters: {
-        type: "object",
-        required: ["image_url"],
-        properties: {
-          image_url: {
-            type: "string",
-            description: "URL of the receipt image",
-          },
-        },
-      },
+      parameters: Type.Object({
+        image_url: Type.String({ description: "URL of the receipt image" }),
+      }),
       execute: wrapExecute((params) =>
         handleParseReceiptScreenshot(
           params.image_url as string,
