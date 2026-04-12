@@ -12,7 +12,7 @@
   },
   "license": "MIT",
   "author": "Amin",
-  "type": "commonjs",
+  "type": "module",
   "openclaw": {
     "extensions": ["./src/index.ts"],
     "compat": {
