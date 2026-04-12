@@ -16,7 +16,7 @@ import { handleSyncRideEmails } from "./tools/sync";
 import { syncEmails } from "./gmail/sync";
 import { createEmailSyncService } from "./services/emailSync";
 import { checkUnnotifiedSyncErrors } from "./hooks/syncNotifications";
-import { checkGmailSetupNotification } from "./hooks/gmailSetupNotification";
+
 import { handleParseReceiptScreenshot } from "./tools/screenshot";
 import {
   createRidesCommand,
@@ -346,11 +346,8 @@ export default definePluginEntry({
     // Notification hooks
     api.on("before_prompt_build", async (_event, _ctx) => {
       const syncErrors = await checkUnnotifiedSyncErrors(db);
-      const gmailSetup = await checkGmailSetupNotification(db);
-      const messages = [syncErrors, gmailSetup].filter((m): m is string => m != null);
-      if (messages.length > 0) {
-        api.logger.info(`[rides] injecting ${messages.length} notification(s) into prompt: ${messages.join(" | ")}`);
-        return { appendSystemContext: messages.join("\n\n") };
+      if (syncErrors) {
+        return { appendSystemContext: syncErrors };
       }
     });
   },

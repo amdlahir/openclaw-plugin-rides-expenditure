@@ -118,16 +118,25 @@ export function parseGrabReceipt(
     }
   }
 
-  // Extract pickup/dropoff — Grab emails have two address+time pairs after "Your Trip"
-  // Format: "address\ntime\naddress\ntime" (e.g. "143 Pasir Ris Grove\n9:34PM\n647 Pasir Ris Drive 10\n9:43PM")
-  const tripMatch = cleaned.match(
-    /Your Trip[^\n]*\n[^\n]*(?:km|mi)[^\n]*\n\s*([^\n]+)\n\s*\d{1,2}:\d{2}\s*[AP]M\s*\n\s*([^\n]+)\n\s*\d{1,2}:\d{2}\s*[AP]M/i,
-  );
-  if (tripMatch) {
-    const p = tripMatch[1].trim();
-    const d = tripMatch[2].trim();
-    if (p.length > 3) { pickup = p.substring(0, 200); confidence += 0.1; }
-    if (d.length > 3) { dropoff = d.substring(0, 200); confidence += 0.1; }
+  const tripSection = cleaned.match(/Your Trip[\s\S]*$/i);
+  if (tripSection) {
+    const section = tripSection[0];
+    const locations: string[] = [];
+    const pairRegex = /([^\n]{5,})\n\s*\d{1,2}:\d{2}\s*[AP]M/gi;
+    let m;
+    while ((m = pairRegex.exec(section)) !== null) {
+      const loc = m[1].trim();
+      if (loc.length > 5) {
+        locations.push(loc.substring(0, 200));
+      }
+    }
+    if (locations.length >= 2) {
+      if (!pickup) { pickup = locations[0]; confidence += 0.1; }
+      if (!dropoff) { dropoff = locations[1]; confidence += 0.1; }
+    } else if (locations.length === 1 && !pickup) {
+      pickup = locations[0];
+      confidence += 0.05;
+    }
   }
 
   // Fallback to generic patterns if "Your Trip" section not found
