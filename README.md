@@ -94,9 +94,17 @@ You should see in the gateway logs:
 
 ### Expose tools to the agent
 
-Two config entries are needed for the agent to call plugin tools (slash commands work without these):
+Two config entries are needed for the agent to call plugin tools (slash commands work without these).
 
-**1.** Add `plugins.allow` in `~/.openclaw/openclaw.json`:
+**CLI (recommended):**
+
+```bash
+openclaw config set plugins.allow '["rides"]'
+openclaw config set tools.alsoAllow '["log_ride","list_rides","search_rides","update_ride","delete_ride","ride_spending_stats","set_ride_budget","get_budget_status","sync_ride_emails","parse_receipt_screenshot"]'
+openclaw gateway restart
+```
+
+**Manual:** Add to `~/.openclaw/openclaw.json`:
 
 ```json
 {
@@ -106,9 +114,9 @@ Two config entries are needed for the agent to call plugin tools (slash commands
 }
 ```
 
-Without this, slash commands work but the agent cannot call tools like `log_ride` or `sync_ride_emails`.
+Without `plugins.allow`, slash commands work but the agent cannot call tools like `log_ride` or `sync_ride_emails`.
 
-**2.** If your `tools` config uses `profile` (e.g., `"messaging"` or `"coding"`), plugin tools are excluded by default. Add them via `alsoAllow`:
+If your `tools` config uses `profile` (e.g., `"messaging"` or `"coding"`), plugin tools are excluded by default. Add them via `alsoAllow`:
 
 ```json
 {
@@ -120,12 +128,6 @@ Without this, slash commands work but the agent cannot call tools like `log_ride
 ```
 
 Merge these into your existing config -- don't replace the whole file. Using `tools.allow` instead of `alsoAllow` will **replace** the profile's tools rather than adding to them.
-
-Restart the gateway after making config changes:
-
-```bash
-openclaw gateway restart
-```
 
 ## Configuration
 
