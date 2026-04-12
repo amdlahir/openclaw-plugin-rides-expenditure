@@ -1,6 +1,6 @@
 {
   "name": "rides",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "OpenClaw plugin for ride-hailing expense tracking",
   "homepage": "https://github.com/amdlahir/openclaw-plugin-rides#readme",
   "bugs": {
